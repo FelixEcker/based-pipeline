@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 tokio = {version = "1.20.2", features = ["full"]}
 openal = "0.2.2"
+rodio = "0.16.0"
