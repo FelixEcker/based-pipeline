@@ -10,8 +10,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // let socket = TcpSocket::new_v4()?;
 
-    let mut stream = TcpStream::connect("127.0.0.1:5000").await?;
-    println!("Success connecting to 127.0.0.1:5000");
+    let mut stream = TcpStream::connect("127.0.0.1:1337").await?;
+    println!("Success connecting to 127.0.0.1:1337");
 
     let mut b1 = [0; 10];
     let mut b2 = [0; 10];
