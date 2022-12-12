@@ -7,7 +7,7 @@ unit uClient;
 {***********************************************************}
 
 interface
-  uses SysUtils, Sockets, CTypes, UnixType {$ifdef unix}, cthreads {$endif};
+  uses {$ifdef unix} cthreads, {$endif} SysUtils, Sockets, CTypes, UnixType;
 
   type 
     TClient = record
