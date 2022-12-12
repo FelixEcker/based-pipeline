@@ -17,7 +17,7 @@ const
   tmpS... - Temporary Client data for accepting
 }
 var
-  S        : Longint;
+  S, tmpS  : Longint;
   SAddr    : TInetSockAddr;
   tmpSAddr : PSockAddr;
   tmpSLen  : PSockLen;
@@ -44,13 +44,13 @@ begin
   if fpListen(S, 1) = -1 then
     perror('Server : Listen : ');
  
-  Writeln('Info: Server Ready');
+  writeln('Info: Server Ready');
   while True do
   begin
-    fpAccept(S, @tmpSAddr, @tmpSLen);
+    tmpS := fpAccept(S, @tmpSAddr, @tmpSLen);
 
     writeln('Info: Accepeted Connection');
-    CreateClient(tmpSAddr, tmpSLen);
+    CreateClient(tmpS, tmpSAddr, tmpSLen);
   end;
 
   StopClients;
