@@ -1,7 +1,7 @@
 {$mode fpc}
 program bugattiserv;
 
-uses uClient, Sockets, CTypes, UnixType;
+uses uClient, Sockets, SysUtils, CTypes, UnixType, uShared;
 
 {
   buggatiserv - server startup & connection acception
@@ -17,10 +17,10 @@ const
   tmpS... - Temporary Client data for accepting
 }
 var
-  S, tmpS  : Longint;
-  SAddr    : TInetSockAddr;
-  tmpSAddr : PSockAddr;
-  tmpSLen  : PSockLen;
+  S, tmpS    : Longint;
+  SAddr      : TInetSockAddr;
+  tmpSAddr   : PSockAddr;
+  tmpSLen    : PSockLen;
 
 procedure perror(const S:string);
 begin
@@ -29,6 +29,13 @@ begin
 end;
 
 begin
+  if ParamCount() = 0 then
+  begin
+    writeln('Provide ALPHA-Passphrase as 1st argument!');
+    halt;
+  end;
+  passphrase := ParamStr(1);
+
   S :=fpSocket(AF_INET,SOCK_STREAM, 0);
   if SocketError <> 0 then
     perror('Server : Socket : ');

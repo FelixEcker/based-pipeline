@@ -23,6 +23,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     //assert_eq!(n, stream.read(&mut b2[..n]).await?);
     //assert_eq!(&b1[..n], &b2[..n]);
-    stream.write_all(b"Hello World!").await?;
+    stream.write_all(b"alpha").await?;
     Ok(())
 }

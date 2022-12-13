@@ -7,11 +7,10 @@ unit uClient;
 {***********************************************************}
 
 interface
-  uses {$ifdef unix} cthreads, {$endif} SysUtils, Sockets, CTypes, UnixType;
+  uses {$ifdef unix} cthreads, {$endif} SysUtils, Sockets, CTypes, UnixType,
+        Types, uShared;
 
   type 
-    TByteBuff = array[0..255] of Byte;
-
     TClient = record
       { Thread Control }
       should_halt, halted: Boolean;
@@ -33,6 +32,7 @@ interface
   procedure CreateClient(const CS: Longint; const sAddr: PSockAddr; const sLen: PSockLen);
   procedure StopClients;
   function ClientExecute(p: Pointer): PtrInt;
+  function AlphaExecute(p: Pointer): PtrInt;
 
   var
     ALPHA_THREAD: PClient;
@@ -65,8 +65,8 @@ implementation
   var
     i: Integer;
     recp: PClient;
-    buf: TByteBuff;
-    phrase: ShortString;
+    buf: TByteDynArray;
+    recvstr: ShortString;
   begin  
     recp := PClient(p);
 
@@ -74,6 +74,7 @@ implementation
     
     { Receive Passphrase to check if ALPHA }
 
+    SetLength(buf, 512);
     if (fprecv(recp^.S, @buf, Length(buf), 0) = -1) then
     begin
       writeln(SocketError);
@@ -81,12 +82,14 @@ implementation
       exit(-1);
     end;
 
-    phrase := '';
+    recvstr := '';
     for i := 0 to Length(buf)-1 do
-      if buf[i] = 0 then break
-      else phrase := phrase + Char(buf[i]);
+      if (buf[i] = 0) then break
+      else recvstr := recvstr + Char(buf[i]);
 
-    (* phrase : NOTALPHA = NormalWeiter; phrase : <ALPHAPHRASE> = BranchAlphaEx; *)
+    (* Exec as alpha if passphrase *)
+    if (recvstr = passphrase) and (ALPHA_THREAD = nil) then
+      exit(AlphaExecute(p)); 
 
     {******************************}
 
@@ -101,9 +104,35 @@ implementation
     ClientExecute := 0;
   end;
 
+  (* Muss in tandem mit Discord-Bot getestet werden, ist besser so *)
   function AlphaExecute(p: Pointer): PtrInt;
+  var
+    i: Integer;
+    recp: PClient;
+    buf: TByteDynArray;
+    recvstr: ShortString;
   begin
-    writeln('Alpha is executing');
+    writeln(Format('Info: Thread $%p is executing as Alpha', [p]));
+    
+    SetLength(buf, 512);
+    while not recp^.should_halt do
+    begin
+      if (fprecv(recp^.S, @buf, Length(buf), 0) = -1) then
+      begin
+        writeln('Info: Alpha Client lost connection');
+        recp^.halted := True;
+        break;
+      end;
+      
+      recvstr := ShortString(BytesToStr(buf));
+      if (recvstr[1] = 'b') then
+        Writeln(recvstr); //SignalBased(Copy(recvstr, 2, Length(recvstr)));}
+    end;
+
+    ALPHA_THREAD := nil;
     AlphaExecute := 0;
   end;
+
+initialization
+  ALPHA_THREAD := nil;
 end.
