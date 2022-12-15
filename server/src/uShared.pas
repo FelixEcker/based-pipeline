@@ -23,5 +23,7 @@ implementation
     for i := 0 to Length(ABuf)-1 do
       if ABuf[i] = 0 then exit(out)
       else out := out + Char(ABuf[i]);
+
+    BytesToStr := out;
   end;
 end.

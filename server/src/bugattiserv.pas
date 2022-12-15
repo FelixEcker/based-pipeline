@@ -1,6 +1,11 @@
 {$mode fpc}
 program bugattiserv;
 
+{**********************************************************************}
+{ bugattiserv.pas ; The Official Server-Program for the based-pipeline }
+{ Author: Felix Eckert                                                 }
+{**********************************************************************}
+
 uses uClient, Sockets, SysUtils, CTypes, UnixType, uShared;
 
 {

@@ -16,8 +16,8 @@ interface
       should_halt, halted: Boolean;
       
       { Should a Based Time sent. based_time is a Unix-Timestamp }
-      send_based: Boolean;
-      based_time: UInt32;
+      (*send_based: Boolean;
+      based_time: UInt32;*)
 
       { Socket, Address and Length }
       S: Longint;
@@ -61,6 +61,15 @@ implementation
       THREADS[i].should_halt := True;
   end;
 
+  procedure Broadcast(const ASender: PSockAddr; const AMsg: String);
+  var
+    i: Integer;
+  begin
+    for i := 0 to Length(THREADS)-1 do
+      if THREADS[i].sAddr <> ASender then
+        fpSend(THREADS[i].S, @AMsg, Length(AMsg), 0);
+  end;
+
   function ClientExecute(p: Pointer): PtrInt;
   var
     i: Integer;
@@ -82,10 +91,7 @@ implementation
       exit(-1);
     end;
 
-    recvstr := '';
-    for i := 0 to Length(buf)-1 do
-      if (buf[i] = 0) then break
-      else recvstr := recvstr + Char(buf[i]);
+    recvstr := ShortString(BytesToStr(buf));
 
     (* Exec as alpha if passphrase *)
     if (recvstr = passphrase) and (ALPHA_THREAD = nil) then
@@ -107,11 +113,11 @@ implementation
   (* Muss in tandem mit Discord-Bot getestet werden, ist besser so *)
   function AlphaExecute(p: Pointer): PtrInt;
   var
-    i: Integer;
     recp: PClient;
     buf: TByteDynArray;
     recvstr: ShortString;
   begin
+    recp := PClient(p);
     writeln(Format('Info: Thread $%p is executing as Alpha', [p]));
     
     SetLength(buf, 512);
@@ -126,7 +132,7 @@ implementation
       
       recvstr := ShortString(BytesToStr(buf));
       if (recvstr[1] = 'b') then
-        Writeln(recvstr); //SignalBased(Copy(recvstr, 2, Length(recvstr)));}
+        Broadcast(recp^.sAddr, Copy(recvstr, 2, Length(recvstr)));
     end;
 
     ALPHA_THREAD := nil;
