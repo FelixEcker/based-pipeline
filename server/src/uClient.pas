@@ -42,6 +42,8 @@ implementation
 
   procedure CreateClient(const CS: Longint; const sAddr: PSockAddr; const sLen: PSockLen);
   begin
+    { Auch wenn Threads "ausgelaufen" sind bleiben sie im Array vorhanden,
+      ist zwar net optimal aber passt schon für diese Anwendung }
     SetLength(THREADS, Length(THREADS)+1);
     THREADS[High(THREADS)].should_halt := False;
     THREADS[High(THREADS)].halted      := False;
