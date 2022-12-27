@@ -27,12 +27,6 @@ var
   tmpSAddr   : PSockAddr;
   tmpSLen    : PSockLen;
 
-procedure perror(const S:string);
-begin
-  writeln (S,SocketError);
-  halt(100);
-end;
-
 begin
   if ParamCount() = 0 then
   begin
@@ -64,6 +58,4 @@ begin
     writeln('Info: Accepeted Connection');
     CreateClient(tmpS, tmpSAddr, tmpSLen);
   end;
-
-  StopClients;
 end.

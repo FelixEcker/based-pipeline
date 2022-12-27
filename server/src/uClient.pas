@@ -30,7 +30,6 @@ interface
     TClientDynArray = array of TClient;
 
   procedure CreateClient(const CS: Longint; const sAddr: PSockAddr; const sLen: PSockLen);
-  procedure StopClients;
   function ClientExecute(p: Pointer): PtrInt;
   function AlphaExecute(p: Pointer): PtrInt;
 
@@ -53,12 +52,13 @@ implementation
     BeginThread(@ClientExecute, @(THREADS[High(THREADS)]));
   end;
 
-  procedure StopClients;
+  procedure CloseSockets;
   var
     i: Integer;
   begin
     for i := 0 to Length(THREADS)-1 do
-      THREADS[i].should_halt := True;
+      if CloseSocket(THREADS[i].S) = -1 then
+        perror('Server: CloseSocket: ');
   end;
 
   procedure Broadcast(const ASender: PSockAddr; const AMsg: String);
@@ -74,23 +74,21 @@ implementation
   var
     i: Integer;
     recp: PClient;
-    buf: TByteDynArray;
+    buf: TBuffer;
     recvstr: ShortString;
   begin  
     recp := PClient(p);
 
-    writeln('Started new Client-Thread!');  
+    writeln('Info: Started new Client-Thread!');  
     
     { Receive Passphrase to check if ALPHA }
 
-    SetLength(buf, 512);
     if (fprecv(recp^.S, @buf, Length(buf), 0) = -1) then
     begin
       writeln(SocketError);
       recp^.halted := True;
       exit(-1);
     end;
-
     recvstr := ShortString(BytesToStr(buf));
 
     (* Exec as alpha if passphrase *)
@@ -98,13 +96,6 @@ implementation
       exit(AlphaExecute(p)); 
 
     {******************************}
-
-    while not recp^.should_halt do
-    begin
-      while not recp^.send_based do begin end;
-      recp^.send_based := False;
-      writeln('Send Based');
-    end;
 
     recp^.halted := True;
     ClientExecute := 0;
@@ -114,13 +105,12 @@ implementation
   function AlphaExecute(p: Pointer): PtrInt;
   var
     recp: PClient;
-    buf: TByteDynArray;
+    buf: TBuffer;
     recvstr: ShortString;
   begin
     recp := PClient(p);
     writeln(Format('Info: Thread $%p is executing as Alpha', [p]));
     
-    SetLength(buf, 512);
     while not recp^.should_halt do
     begin
       if (fprecv(recp^.S, @buf, Length(buf), 0) = -1) then
@@ -141,4 +131,8 @@ implementation
 
 initialization
   ALPHA_THREAD := nil;
+
+finalization
+  ALPHA_THREAD^.should_halt := True;
+  CloseSockets;
 end.

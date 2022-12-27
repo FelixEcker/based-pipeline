@@ -7,19 +7,30 @@ unit uShared;
 {********************************************************}
 
 interface
-  uses Types;
+  uses SysUtils, Sockets, Types;
+
+  type
+    TBuffer = array[0..512] of Byte;
 
   var
     passphrase: ShortString;
 
-  function BytesToStr(const ABuf: TByteDynArray): String;
+  procedure perror(const S: String);
+  function BytesToStr(var ABuf: TBuffer): String;
 implementation
-  function BytesToStr(const ABuf: TByteDynArray): String;
+  procedure perror(const S: String);
+  begin
+    writeln (S,SocketError);
+    halt(100);
+  end;
+  
+  function BytesToStr(var ABuf: TBuffer): String;
   var
     out: String;
     i: Integer;
   begin
     out := '';
+
     for i := 0 to Length(ABuf)-1 do
       if ABuf[i] = 0 then exit(out)
       else out := out + Char(ABuf[i]);
